@@ -1,0 +1,1010 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>USPS Load Board</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@700;800&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ac:#4A9EE8;
+  --ac2:#2F7DC7;
+  --danger:#E85D3F;
+  --success:#3CB97A;
+  --info:#9B7FE8;
+  --warn:#E8A030;
+  --radius:10px;
+  --radius-sm:6px;
+  --font-display:'Syne',sans-serif;
+  --font-mono:'Space Mono',monospace;
+  --font-body:'DM Sans',sans-serif;
+}
+[data-theme="dark"]{
+  --bg:#0D0D0F;
+  --bg2:#141417;
+  --bg3:#1C1C21;
+  --bg4:#242429;
+  --border:rgba(255,255,255,.07);
+  --border2:rgba(255,255,255,.13);
+  --text:#F0EFE8;
+  --text2:#B8B6C0;
+  --text3:#8A8890;
+  --glow:rgba(74,158,232,.15);
+}
+[data-theme="light"]{
+  --bg:#F5F3EE;
+  --bg2:#EDEAE3;
+  --bg3:#FFFFFF;
+  --bg4:#E8E5DE;
+  --border:rgba(0,0,0,.08);
+  --border2:rgba(0,0,0,.15);
+  --text:#1A1814;
+  --text2:#5A5450;
+  --text3:#7A7570;
+  --glow:rgba(74,158,232,.12);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--font-body);background:var(--bg);color:var(--text);min-height:100vh;transition:background .25s,color .25s;font-size:14px}
+a{color:var(--ac);text-decoration:none}
+a:hover{text-decoration:underline}
+
+/* NAV */
+.nav{background:var(--bg2);border-bottom:1px solid var(--border);padding:0 24px;display:flex;align-items:center;justify-content:space-between;height:56px;position:sticky;top:0;z-index:100}
+.nav-left{display:flex;align-items:center;gap:14px}
+.logo{font-family:var(--font-display);font-weight:800;font-size:18px;letter-spacing:.04em;text-transform:uppercase}
+.logo-usps{color:var(--ac)}
+.logo-rest{color:var(--text)}
+.logo-sub{font-family:var(--font-mono);font-size:9px;color:var(--text3);letter-spacing:.12em;text-transform:uppercase;display:block;margin-top:-3px}
+.admin-pill{background:var(--bg3);border:1px solid var(--border2);border-radius:20px;padding:3px 11px;font-family:var(--font-mono);font-size:10px;color:var(--text2);letter-spacing:.06em}
+.nav-right{display:flex;align-items:center;gap:10px}
+.carrier-tag{font-family:var(--font-mono);font-size:12px;color:var(--text);background:var(--bg3);border:1px solid var(--border2);border-radius:20px;padding:4px 13px}
+.carrier-tag strong{color:var(--ac)}
+
+/* THEME TOGGLE */
+.theme-btn{width:40px;height:23px;background:var(--bg4);border:1px solid var(--border2);border-radius:12px;position:relative;cursor:pointer;flex-shrink:0;transition:background .2s}
+.theme-btn::after{content:'';position:absolute;top:3px;left:3px;width:15px;height:15px;border-radius:50%;background:var(--ac);transition:transform .2s}
+[data-theme="light"] .theme-btn::after{transform:translateX(17px)}
+.theme-icon{font-size:10px;position:absolute;top:50%;transform:translateY(-50%);pointer-events:none}
+.theme-icon.moon{left:5px}
+.theme-icon.sun{right:4px}
+
+/* PAGE */
+.page{max-width:1300px;margin:0 auto;padding:24px 20px}
+
+/* STATS */
+.sg{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:24px}
+.sc{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:16px 18px;position:relative;overflow:hidden}
+.sc::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:var(--ac);opacity:.5}
+.sc.s-danger::before{background:var(--danger)}
+.sc.s-success::before{background:var(--success)}
+.sc.s-info::before{background:var(--info)}
+.sl{font-family:var(--font-mono);font-size:9px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.1em;margin-bottom:8px}
+.sv{font-family:var(--font-display);font-weight:800;font-size:32px;color:var(--text);line-height:1}
+
+/* CARD */
+.card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;margin-bottom:16px}
+.card-header{display:flex;justify-content:space-between;align-items:center;padding:14px 18px;border-bottom:1px solid var(--border);flex-wrap:wrap;gap:10px;background:var(--bg3)}
+.card-title{font-family:var(--font-display);font-weight:800;font-size:15px;letter-spacing:.03em;text-transform:uppercase}
+
+/* TABLE */
+table{border-collapse:collapse;width:100%}
+th{text-align:left;font-family:var(--font-mono);font-size:10px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.08em;padding:10px 16px;border-bottom:1px solid var(--border);white-space:nowrap;background:var(--bg3)}
+td{padding:12px 16px;font-size:14px;border-bottom:1px solid var(--border);color:var(--text);vertical-align:middle;transition:background .1s}
+tr:last-child td{border-bottom:none}
+tbody tr:hover td{background:var(--bg3)}
+.oa{overflow-x:auto}
+
+/* FORMS */
+label{display:block;font-family:var(--font-mono);font-size:10px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px}
+input,select{width:100%;padding:9px 12px;border:1px solid var(--border2);border-radius:var(--radius-sm);background:var(--bg3);color:var(--text);font-family:var(--font-body);font-size:14px;outline:none;transition:border-color .15s,box-shadow .15s;-webkit-appearance:none;color-scheme:dark}
+[data-theme="light"] input,[data-theme="light"] select{color-scheme:light}
+input:focus,select:focus{border-color:var(--ac);box-shadow:0 0 0 3px var(--glow)}
+.ff{margin-bottom:13px}
+.fg{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.ds{border-top:1px solid var(--border);padding-top:16px;margin-top:14px}
+.dl{font-family:var(--font-mono);font-size:10px;font-weight:700;color:var(--ac);text-transform:uppercase;letter-spacing:.08em;margin-bottom:12px}
+.cb-row{display:flex;align-items:center;gap:10px;margin-top:4px}
+.cb-row input[type=checkbox]{width:18px;height:18px;flex-shrink:0;accent-color:var(--ac);cursor:pointer}
+.cb-row label{margin:0;text-transform:none;font-size:13px;color:var(--text2);letter-spacing:0;cursor:pointer;font-family:var(--font-body);font-weight:400}
+
+/* BUTTONS */
+button{cursor:pointer;font-family:var(--font-body);line-height:1;border-radius:var(--radius-sm);font-size:13px;font-weight:600;transition:all .15s}
+button:hover{opacity:.85;transform:translateY(-1px)}
+button:active{transform:translateY(0)}
+.bp{background:var(--ac);color:#fff;border:none;padding:9px 18px}
+.bo{background:transparent;color:var(--ac);border:1px solid var(--ac);padding:8px 17px}
+.bg{background:transparent;color:var(--text2);border:1px solid var(--border2);padding:8px 17px}
+.bd{background:transparent;color:var(--danger);border:1px solid rgba(232,93,63,.4);padding:8px 17px}
+.bs2{background:transparent;color:var(--success);border:1px solid rgba(60,185,122,.35);padding:8px 17px}
+
+/* BADGES */
+.badge{display:inline-flex;align-items:center;padding:3px 9px;border-radius:4px;font-family:var(--font-mono);font-size:10px;font-weight:700;white-space:nowrap;letter-spacing:.04em;text-transform:uppercase}
+.ba{background:rgba(74,158,232,.15);color:var(--ac);border:1px solid rgba(74,158,232,.3)}
+.bs{background:rgba(60,185,122,.12);color:var(--success);border:1px solid rgba(60,185,122,.3)}
+.brd{background:rgba(232,93,63,.12);color:var(--danger);border:1px solid rgba(232,93,63,.3)}
+.bi{background:rgba(155,127,232,.12);color:var(--info);border:1px solid rgba(155,127,232,.3)}
+.bgr{background:var(--bg4);color:var(--text2);border:1px solid var(--border2)}
+.bwarn{background:rgba(232,160,48,.12);color:var(--warn);border:1px solid rgba(232,160,48,.3)}
+.bhot{background:rgba(232,93,63,.18);color:#FF6B4A;border:1px solid rgba(232,93,63,.5);animation:blink 1.5s infinite}
+.hot-row td{background:rgba(232,93,63,.04)!important}
+
+/* ALERTS */
+.err-box{background:rgba(232,93,63,.1);border:1px solid rgba(232,93,63,.3);border-radius:var(--radius-sm);padding:10px 14px;color:var(--danger);font-size:13px;margin-bottom:14px}
+.ok-box{background:rgba(60,185,122,.1);border:1px solid rgba(60,185,122,.3);border-radius:var(--radius-sm);padding:10px 14px;color:var(--success);font-size:13px;margin-bottom:14px}
+.warn-box{background:rgba(232,93,63,.08);border:1px solid rgba(232,93,63,.25);border-radius:var(--radius-sm);padding:10px 14px;color:var(--danger);font-size:13px;margin-bottom:14px}
+.info-box{background:rgba(74,158,232,.08);border:1px solid rgba(74,158,232,.25);border-radius:var(--radius-sm);padding:10px 14px;color:var(--ac);font-size:13px;margin-bottom:14px}
+
+/* TABS */
+.tabs{display:flex;border-bottom:1px solid var(--border);margin-bottom:20px}
+.tab{padding:10px 18px;background:none;border:none;border-bottom:2px solid transparent;color:var(--text3);font-family:var(--font-mono);font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;cursor:pointer;margin-bottom:-1px;border-radius:0;transition:color .15s,border-color .15s}
+.tab.on{color:var(--ac);border-bottom-color:var(--ac)}
+
+/* TIMER */
+.timer{display:inline-flex;align-items:center;gap:4px;font-family:var(--font-mono);font-size:10px;font-weight:700;padding:3px 8px;border-radius:4px;white-space:nowrap}
+.t-ok{background:rgba(60,185,122,.12);color:var(--success);border:1px solid rgba(60,185,122,.25)}
+.t-warn{background:rgba(232,160,48,.12);color:var(--warn);border:1px solid rgba(232,160,48,.3)}
+.t-urgent{background:rgba(232,93,63,.12);color:var(--danger);border:1px solid rgba(232,93,63,.3);animation:blink 1s infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.55}}
+@keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
+.spin{display:inline-block;animation:spin 1s linear infinite}
+@keyframes pulse2{0%,100%{opacity:1}50%{opacity:.4}}
+.live-dot{width:6px;height:6px;border-radius:50%;background:var(--success);display:inline-block;margin-right:5px;animation:pulse2 2s infinite}
+
+/* BID INFO */
+.low-bid{display:inline-flex;align-items:center;gap:4px;font-family:var(--font-mono);font-size:10px;font-weight:700;padding:3px 8px;border-radius:4px;background:rgba(60,185,122,.1);color:var(--success);border:1px solid rgba(60,185,122,.25);white-space:nowrap}
+.no-bid{display:inline-flex;align-items:center;font-family:var(--font-mono);font-size:10px;padding:3px 8px;border-radius:4px;background:var(--bg4);color:var(--text3);border:1px solid var(--border);white-space:nowrap}
+
+/* FILTER BAR */
+.filter-bar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;padding:12px 18px;border-bottom:1px solid var(--border);background:var(--bg)}
+.fi{border:1px solid var(--border2);border-radius:var(--radius-sm);padding:7px 10px;font-size:13px;font-family:var(--font-body);outline:none;background:var(--bg3);color:var(--text);width:auto;transition:border-color .15s}
+.fi:focus{border-color:var(--ac)}
+
+/* MAP LINK */
+.map-btn{display:inline-flex;align-items:center;gap:4px;background:var(--bg4);border:1px solid var(--border2);border-radius:6px;padding:5px 10px;font-size:11px;color:var(--text2);text-decoration:none;font-family:var(--font-mono);white-space:nowrap;transition:all .15s}
+.map-btn:hover{border-color:var(--ac);color:var(--ac);text-decoration:none}
+
+/* MODAL */
+.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.72);display:flex;align-items:center;justify-content:center;z-index:200;padding:16px;backdrop-filter:blur(4px)}
+.modal{background:var(--bg2);border:1px solid var(--border2);border-radius:14px;width:100%;max-width:580px;max-height:90vh;overflow-y:auto;box-shadow:0 32px 80px rgba(0,0,0,.45)}
+.modal-header{padding:18px 22px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:flex-start;background:var(--bg3)}
+.modal-title{font-family:var(--font-display);font-weight:800;font-size:17px;text-transform:uppercase;letter-spacing:.03em}
+.modal-sub{font-size:12px;color:var(--text2);margin-top:4px;font-family:var(--font-mono)}
+.modal-body{padding:22px}
+
+/* AUTH */
+.auth-wrap{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px;background:var(--bg);position:relative;overflow:hidden}
+.auth-wrap::before{content:'LOAD BOARD';position:absolute;font-family:var(--font-display);font-weight:800;font-size:16vw;color:var(--text);opacity:.02;white-space:nowrap;pointer-events:none;top:50%;left:50%;transform:translate(-50%,-50%);user-select:none}
+.auth-card{background:var(--bg2);border:1px solid var(--border2);border-radius:14px;width:100%;max-width:440px;overflow:hidden;position:relative;z-index:1;box-shadow:0 24px 80px rgba(0,0,0,.35)}
+.auth-top{padding:32px 32px 24px;border-bottom:1px solid var(--border);background:var(--bg3);text-align:center}
+.auth-logo{font-family:var(--font-display);font-weight:800;font-size:26px;letter-spacing:.04em;text-transform:uppercase;margin-bottom:4px}
+.auth-sub{font-family:var(--font-mono);font-size:9px;color:var(--text3);letter-spacing:.14em;text-transform:uppercase}
+.auth-tabs{display:flex;border-bottom:1px solid var(--border)}
+.auth-tab{flex:1;padding:12px;background:none;border:none;border-bottom:2px solid transparent;color:var(--text3);font-family:var(--font-mono);font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;cursor:pointer;border-radius:0;transition:all .15s}
+.auth-tab.on{color:var(--ac);border-bottom-color:var(--ac)}
+.auth-form{padding:24px 28px}
+.stop-badge{display:inline-block;background:var(--bg4);border:1px solid var(--border2);border-radius:4px;padding:2px 7px;font-size:10px;color:var(--text2);margin:2px;font-family:var(--font-mono)}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<script>
+/* CONFIG */
+var PROXY='https://restless-lab-de0d.biegajpeter.workers.dev';
+var ADMIN_EMAIL='admin@loadboard.com';
+var ADMIN_PASS='Admin@2026';
+var CHANNEL='usps_live_sean';
+var BID_GAP=50;
+
+/* THEME */
+var theme=localStorage.getItem('lb_theme')||'dark';
+document.documentElement.setAttribute('data-theme',theme);
+function toggleTheme(){theme=theme==='dark'?'light':'dark';document.documentElement.setAttribute('data-theme',theme);localStorage.setItem('lb_theme',theme);draw();}
+
+/* STORAGE */
+function store(k,v){try{if(v===undefined)return JSON.parse(localStorage.getItem(k)||'null');localStorage.setItem(k,JSON.stringify(v));}catch(e){return null;}}
+
+/* TELEGRAM PARSER */
+function parseHTML(html){
+  var tmp=document.createElement('div');
+  tmp.innerHTML=html;
+  var msgs=tmp.querySelectorAll('.tgme_widget_message');
+  var loads=[],seen={};
+  window._debugMsgs=[];
+  for(var i=0;i<msgs.length;i++){
+    var el=msgs[i].querySelector('.tgme_widget_message_text');
+    if(!el)continue;
+    var txt=el.innerText||el.textContent||'';
+    if(!txt||txt.length<10)continue;
+    // Store first 20 messages for debugging
+    if(window._debugMsgs.length<20)window._debugMsgs.push(txt.slice(0,300));
+    // Very permissive: any message with a 6+ digit number near SOLO or TEAM
+    var hasSolo=txt.indexOf('SOLO')>=0||txt.indexOf('solo')>=0;
+    var hasTeam=txt.indexOf('TEAM')>=0||txt.indexOf('team')>=0;
+    if(!hasSolo&&!hasTeam)continue;
+    var mapLink=null;
+    var ancs=msgs[i].querySelectorAll('a[href]');
+    for(var j=0;j<ancs.length;j++){
+      var h=ancs[j].getAttribute('href')||'';
+      var t2=(ancs[j].textContent||'').toLowerCase();
+      if(h.indexOf('maps.google')>=0||h.indexOf('goo.gl')>=0||h.indexOf('maps.app')>=0){mapLink=h;break;}
+      if(t2.indexOf('route')>=0||t2.indexOf('map')>=0){mapLink=h;break;}
+    }
+    try{
+      var load=parseLoad(txt,msgs[i],mapLink);
+      if(load&&!seen[load.id]){seen[load.id]=1;loads.push(load);}
+    }catch(e){window._debugMsgs.push('PARSE ERROR: '+e.message);}
+  }
+  return loads.sort(function(a,b){return b.ts-a.ts;});
+}
+
+function parseLoad(txt,msgEl,mapLink){
+  // Try multiple ID patterns
+  var idM=txt.match(/(?:SOLO|TEAM)\s*[-–—:]\s*(\d{5,})/i);
+  if(!idM)idM=txt.match(/(?:SOLO|TEAM)[^\d]*(\d{6,})/i);
+  if(!idM){console.log('No ID found in:',txt.slice(0,100));return null;}
+  var isTeam=/TEAM/i.test(txt);
+  var distM=txt.match(/Distance[:\s]+([0-9,]+\.?\d*)\s*miles?/i);
+  var miles=distM?parseFloat(distM[1].replace(/,/g,'')):0;
+  var pickM=txt.match(/PU[:\s]+(\d{1,2}\/\d{1,2}\s+\d{1,2}:\d{2}\s+[APM]{2}(?:\s+[A-Z]{1,3})?)/i);
+  var pickup=pickM?pickM[1].trim():'--';
+  var bidEndsM=txt.match(/Bidding\s+Ends\s+at[:\s]+(\d{1,2}:\d{2}\s+[APM]{2}(?:\s+[A-Z]{1,3})?)/i);
+  if(!bidEndsM)bidEndsM=txt.match(/Bid(?:ding)?\s*Ends?\s*(?:at)?[:\s]+(\d{1,2}:\d{2}\s+[APM]{2}(?:\s+[A-Z]{1,3})?)/i);
+
+  /* Parse stop cities — messages have no newlines, cities follow 📍 emoji
+     Example: "📍 BATON ROUGE, LA📍 NORTH HOUSTON, TX"
+     Strategy: split on the 📍 pin emoji (U+1F4CD) and also on newlines */
+  var stopLines=[];
+  // Replace pin emoji with a delimiter we can split on
+  var pinChar=String.fromCodePoint(0x1F4CD); // 📍
+  var normalized=txt.replace(new RegExp(pinChar,'g'),'||PIN||');
+  // Also normalize newlines
+  normalized=normalized.replace(/\n/g,'||PIN||');
+  var parts=normalized.split('||PIN||');
+  for(var i=0;i<parts.length;i++){
+    var part=parts[i].trim();
+    // Strip leading non-alpha chars
+    part=part.replace(/^[^A-Za-z]*/,'').trim();
+    // Match CITY, ST — allow spaces, dots, hyphens in city name
+    // Stop at any non-city content (emoji, digits, special chars)
+    var m=part.match(/^([A-Za-z][A-Za-z\s\.\-]+),\s*([A-Za-z]{2})(?:\s|$|[^A-Za-z])/);
+    if(m){
+      var city=m[1].trim().toUpperCase();
+      var state=m[2].trim().toUpperCase();
+      var skip=['ET','AM','PM','PU','TO','CT','MT','PT','RD','ST'];
+      // ST could be a state (UT, MT etc) but also "Street" — only skip if in skip list
+      if(skip.indexOf(state)>=0&&state!=='MT'&&state!=='CT')continue;
+      if(city.length>=2&&city.length<=50)stopLines.push(city+', '+state);
+    }
+  }
+  if(stopLines.length<2)return null;
+
+  var timeEl=msgEl&&msgEl.querySelector('.tgme_widget_message_date time');
+  var linkEl=msgEl&&msgEl.querySelector('a.tgme_widget_message_date');
+  var postTs=timeEl?new Date(timeEl.getAttribute('datetime')).getTime():Date.now();
+
+  var expiresAt=postTs+30*60*1000;
+  if(bidEndsM){
+    var raw=bidEndsM[1].replace(/\s+[A-Z]{2,3}$/,'').trim();
+    var now=new Date();
+    var attempt=new Date((now.getMonth()+1)+'/'+now.getDate()+'/'+now.getFullYear()+' '+raw);
+    if(!isNaN(attempt.getTime())){
+      if(attempt.getTime()<Date.now()-120000)attempt.setDate(attempt.getDate()+1);
+      expiresAt=attempt.getTime();
+    }
+  }
+
+  // Parse pickup time into timestamp for hot load detection
+  // Format: "04/05 12:00 PM CT" → strip timezone → "04/05 12:00 PM" → parse
+  var pickupTs=null;
+  if(pickupM){
+    try{
+      var puRaw=pickupM[1].replace(/\s+[A-Z]{1,3}$/,'').trim();
+      var puParts=puRaw.match(/(\d{1,2})\/(\d{1,2})\s+(\d{1,2}:\d{2}\s+[APM]{2})/i);
+      if(puParts){
+        var puYear=new Date().getFullYear();
+        var puStr=puParts[1]+'/'+puParts[2]+'/'+puYear+' '+puParts[3];
+        var puDate=new Date(puStr);
+        if(!isNaN(puDate.getTime())){
+          if(puDate.getTime()<Date.now()-3600000)puDate.setFullYear(puDate.getFullYear()+1);
+          pickupTs=puDate.getTime();
+        }
+      }
+    }catch(puErr){}
+  }
+  var isHot=pickupTs!==null&&(pickupTs-Date.now())<3*60*60*1000&&(pickupTs-Date.now())>0;
+
+  return{
+    id:idM[1],miles:miles,
+    origin:stopLines[0],dest:stopLines[stopLines.length-1],
+    stops:stopLines.map(function(s,i2){return{num:i2+1,loc:s};}),
+    pickup:pickup,pickupTs:pickupTs,isHot:isHot,
+    biddingEnds:bidEndsM?bidEndsM[1].trim():null,
+    ts:postTs,expiresAt:expiresAt,
+    link:linkEl?linkEl.href:'https://t.me/'+CHANNEL,
+    mapLink:mapLink||null,
+    isTeam:isTeam||(miles>=500)
+  };
+}
+
+function fetchLoads(cb){
+  fetch(PROXY+'?channel='+CHANNEL)
+    .then(function(r){return r.text();})
+    .then(function(html){cb(null,parseHTML(html));})
+    .catch(function(e){cb(e.message||'Fetch failed',[]);});
+}
+
+/* BID HELPERS */
+function lowestBid(loadId){
+  var lb=(store('lb_bids')||[]).filter(function(b){return b.loadId===loadId;});
+  if(!lb.length)return null;
+  return Math.min.apply(null,lb.map(function(b){return Number(b.rate)||Infinity;}));
+}
+function bidCount(loadId){return(store('lb_bids')||[]).filter(function(b){return b.loadId===loadId;}).length;}
+
+/* STATE */
+var S={view:'auth',session:null,loads:[],loading:false,error:'',lastRefresh:null,bidLoad:null,toast:'',tab:'loads',authTab:'login',authErr:'',authOk:''};
+function go(patch){Object.assign(S,patch);draw();}
+
+/* DOM HELPERS */
+function mk(tag,attrs,kids){
+  var n=document.createElement(tag);
+  if(attrs)for(var k in attrs){
+    if(k==='cls')n.className=attrs[k];
+    else if(k==='style'&&typeof attrs[k]==='object')Object.assign(n.style,attrs[k]);
+    else if(k.slice(0,2)==='on')n.addEventListener(k.slice(2),attrs[k]);
+    else{try{n.setAttribute(k,attrs[k]);}catch(e){}}
+  }
+  if(kids)[].concat(kids).forEach(function(c){
+    if(c==null||c===false)return;
+    n.appendChild(typeof c==='string'||typeof c==='number'?document.createTextNode(String(c)):c);
+  });
+  return n;
+}
+function d(cls,kids,sty){return mk('div',{cls:cls,style:sty||{}},kids);}
+function t(txt,sty){var s=mk('span',{style:sty||{}});s.textContent=String(txt);return s;}
+function btn(cls,lbl,fn,sty){return mk('button',{cls:cls,style:Object.assign({},sty||{}),onclick:fn},lbl);}
+function fld(lbl,el){return d('ff',[mk('label',{},lbl),el]);}
+function inp(p){
+  var i=mk('input',{});
+  for(var k in p){
+    if(k==='oninput')i.addEventListener('input',p[k]);
+    else if(k==='onkeydown')i.addEventListener('keydown',p[k]);
+    else i[k]=p[k];
+  }
+  return i;
+}
+function bdg(cls,txt2){return mk('span',{cls:'badge '+cls},txt2);}
+function cell(tr,c,s){
+  var td=mk('td',{style:Object.assign({},s||{})});
+  if(c==null){}
+  else if(typeof c==='string'||typeof c==='number')td.textContent=c;
+  else td.appendChild(c);
+  tr.appendChild(td);return td;
+}
+function mkRow(items,sty){return d('',items,Object.assign({display:'flex',alignItems:'center',gap:'8px',flexWrap:'wrap'},sty||{}));}
+
+/* THEME BUTTON */
+function themeBtn(){
+  var w=mk('div',{cls:'theme-btn',onclick:toggleTheme});
+  w.appendChild(mk('span',{cls:'theme-icon moon'},'🌙'));
+  w.appendChild(mk('span',{cls:'theme-icon sun'},'☀'));
+  return w;
+}
+
+/* TIMER */
+function timerEl(load){
+  var exp=load.expiresAt||(load.ts+30*60*1000);
+  var rem=exp-Date.now();
+  if(rem<=0)return null;
+  var mins=Math.floor(rem/60000),secs=Math.floor((rem%60000)/1000);
+  var label='⏱ '+(mins>0?mins+'m ':'')+secs+'s';
+  var cls=mins>=10?'t-ok':mins>=5?'t-warn':'t-urgent';
+  return mk('span',{cls:'timer '+cls,'data-exp':String(exp)},label);
+}
+
+function startTimers(){
+  if(window._tick)clearInterval(window._tick);
+  window._tick=setInterval(function(){
+    var now=Date.now(),expired=false,hotChanged=false;
+    for(var i=0;i<S.loads.length;i++){
+      var exp=S.loads[i].expiresAt||(S.loads[i].ts+30*60*1000);
+      if(now>=exp){expired=true;break;}
+      // Re-evaluate hot status every tick
+      var wasHot=S.loads[i].isHot;
+      var pts=S.loads[i].pickupTs;
+      var nowHot=pts!==null&&(pts-now)<3*60*60*1000&&(pts-now)>0;
+      if(nowHot!==wasHot){S.loads[i].isHot=nowHot;hotChanged=true;}
+    }
+    if(expired){
+      S.loads=S.loads.filter(function(l){return Date.now()<(l.expiresAt||(l.ts+30*60*1000));});
+      draw();return;
+    }
+    if(hotChanged){draw();return;}
+    document.querySelectorAll('[data-exp]').forEach(function(el){
+      var exp=parseInt(el.getAttribute('data-exp'));
+      var rem=exp-Date.now();
+      if(rem<=0){draw();return;}
+      var mins=Math.floor(rem/60000),secs=Math.floor((rem%60000)/1000);
+      el.textContent='⏱ '+(mins>0?mins+'m ':'')+secs+'s';
+      el.className='timer '+(mins>=10?'t-ok':mins>=5?'t-warn':'t-urgent');
+    });
+  },1000);
+}
+
+/* DRAW */
+function draw(){
+  var app=document.getElementById('app');
+  if(!app)return;
+  app.innerHTML='';
+  try{
+    if(S.view==='auth')app.appendChild(drawAuth());
+    else if(S.view==='board')app.appendChild(drawBoard());
+    else if(S.view==='admin')app.appendChild(drawAdmin());
+  }catch(e){
+    app.innerHTML='<div style="padding:40px;color:#E85D3F;font-family:monospace;white-space:pre-wrap">JS Error: '+e.message+'\n'+e.stack+'</div>';
+  }
+}
+
+/* AUTH */
+function drawAuth(){
+  var isLogin=S.authTab==='login';
+  var carrier='',mc='',email='',pw='',confirm='';
+
+  function doLogin(){
+    go({authErr:''});
+    if(email.trim()===ADMIN_EMAIL&&pw===ADMIN_PASS){
+      var u={id:'__admin',role:'admin',email:ADMIN_EMAIL};store('lb_sess',u);go({session:u,view:'admin'});return;
+    }
+    var users=store('lb_users')||[];
+    var u=null;
+    for(var i=0;i<users.length;i++){if(users[i].email.toLowerCase()===email.trim().toLowerCase()&&users[i].pw===pw){u=users[i];break;}}
+    if(!u){go({authErr:'Invalid email or password.'});return;}
+    if(u.status==='pending'){go({authErr:'Account pending admin approval.'});return;}
+    if(u.status==='denied'){go({authErr:'Account access denied.'});return;}
+    store('lb_sess',u);go({session:u,view:'board'});
+  }
+
+  function doRegister(){
+    go({authErr:''});
+    if(!carrier||!mc||!email||!pw){go({authErr:'All fields are required.'});return;}
+    if(pw!==confirm){go({authErr:'Passwords do not match.'});return;}
+    if(pw.length<6){go({authErr:'Password must be at least 6 characters.'});return;}
+    var users=store('lb_users')||[];
+    for(var i=0;i<users.length;i++){
+      if(users[i].email.toLowerCase()===email.trim().toLowerCase()){go({authErr:'Email already registered.'});return;}
+      if(users[i].mc.trim()===mc.trim()){go({authErr:'MC # already registered.'});return;}
+    }
+    var user={id:'USR-'+Date.now(),role:'carrier',carrier:carrier.trim(),mc:mc.trim(),email:email.trim(),pw:pw,status:'pending',at:Date.now()};
+    store('lb_users',[].concat(users,[user]));
+    go({authOk:'Registration submitted! Awaiting admin approval.',authTab:'login',authErr:''});
+  }
+
+  var wrap=d('auth-wrap');
+  var tt=mk('div',{style:{position:'absolute',top:'16px',right:'20px'}});tt.appendChild(themeBtn());wrap.appendChild(tt);
+  var card=d('auth-card');
+  var top=d('auth-top',[
+    mk('div',{cls:'auth-logo'},[mk('span',{style:{color:'var(--ac)'}},'USPS'),mk('span',{style:{color:'var(--text)',marginLeft:'8px'}},'LOAD BOARD')]),
+    mk('div',{cls:'auth-sub'},'Carrier Freight Portal')
+  ]);
+  card.appendChild(top);
+  card.appendChild(d('auth-tabs',[
+    mk('button',{cls:'auth-tab'+(isLogin?' on':''),onclick:function(){go({authTab:'login',authErr:'',authOk:''});}},'Sign In'),
+    mk('button',{cls:'auth-tab'+(!isLogin?' on':''),onclick:function(){go({authTab:'register',authErr:'',authOk:''});}},'Request Access')
+  ]));
+  var form=d('auth-form');
+  if(S.authErr)form.appendChild(d('err-box',S.authErr));
+  if(S.authOk)form.appendChild(d('ok-box',S.authOk));
+  if(isLogin){
+    form.appendChild(fld('Email Address',inp({type:'email',placeholder:'your@email.com',oninput:function(e){email=e.target.value;}})));
+    form.appendChild(fld('Password',inp({type:'password',placeholder:'••••••••',oninput:function(e){pw=e.target.value;},onkeydown:function(e){if(e.key==='Enter')doLogin();}})));
+    form.appendChild(btn('bp','Sign In',doLogin,{width:'100%',marginTop:'4px'}));
+  }else{
+    form.appendChild(fld('Carrier Name',inp({type:'text',placeholder:'ABC Trucking LLC',oninput:function(e){carrier=e.target.value;}})));
+    form.appendChild(fld('MC #',inp({type:'text',placeholder:'MC-123456',oninput:function(e){mc=e.target.value;}})));
+    form.appendChild(fld('Email Address',inp({type:'email',placeholder:'dispatch@company.com',oninput:function(e){email=e.target.value;}})));
+    form.appendChild(fld('Password',inp({type:'password',placeholder:'Min. 6 characters',oninput:function(e){pw=e.target.value;}})));
+    form.appendChild(fld('Confirm Password',inp({type:'password',placeholder:'Re-enter password',oninput:function(e){confirm=e.target.value;}})));
+    form.appendChild(btn('bp','Submit Registration',doRegister,{width:'100%',marginTop:'4px'}));
+    form.appendChild(mk('p',{style:{fontSize:'12px',color:'var(--text3)',textAlign:'center',marginTop:'12px',lineHeight:'1.6',fontFamily:'var(--font-mono)'}},'Requires admin approval before access is granted.'));
+  }
+  card.appendChild(form);
+  wrap.appendChild(card);
+  return wrap;
+}
+
+/* NAV */
+function drawNav(){
+  var sess=S.session;
+  var nav=mk('div',{cls:'nav'});
+  var left=d('nav-left',[d('',[
+    mk('div',{cls:'logo'},[mk('span',{cls:'logo-usps'},'USPS'),mk('span',{cls:'logo-rest'},' LOAD BOARD')]),
+    mk('span',{cls:'logo-sub'},'Carrier Freight Portal')
+  ])]);
+  if(sess&&sess.role==='admin')left.appendChild(mk('span',{cls:'admin-pill'},'ADMIN'));
+  nav.appendChild(left);
+  var right=d('nav-right');
+  if(sess&&sess.role!=='admin'){
+    var ct=mk('span',{cls:'carrier-tag'});
+    ct.appendChild(mk('strong',{},sess.carrier));
+    ct.appendChild(t(' '+sess.mc,{opacity:'.75'}));
+    right.appendChild(ct);
+  }
+  right.appendChild(themeBtn());
+  right.appendChild(btn('bg','Log Out',function(){store('lb_sess',null);go({session:null,view:'auth',authErr:'',authOk:'',authTab:'login'});},{padding:'6px 14px',fontSize:'12px'}));
+  nav.appendChild(right);
+  return nav;
+}
+
+/* STATS */
+function drawStats(items){
+  var g=mk('div',{cls:'sg'});
+  items.forEach(function(s){
+    var c=d('sc'+(s.mod?' '+s.mod:''));
+    c.appendChild(mk('div',{cls:'sl'},s.label));
+    c.appendChild(mk('div',{cls:'sv',style:{color:s.color||'var(--text)'}},String(s.val)));
+    g.appendChild(c);
+  });
+  return g;
+}
+
+/* BOARD */
+function drawBoard(){
+  var loads=S.loads;
+  var bids=store('lb_bids')||[];
+  var myBids=bids.filter(function(b){return b.carrierId===S.session.id;});
+  var frag=document.createDocumentFragment();
+  frag.appendChild(drawNav());
+  var page=d('page');
+
+  if(S.toast){
+    var te=d('ok-box',null,{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:'16px'});
+    te.appendChild(t(S.toast));
+    te.appendChild(btn('','×',function(){go({toast:''});},{background:'none',border:'none',color:'var(--success)',fontSize:'20px',cursor:'pointer',lineHeight:'1'}));
+    page.appendChild(te);
+  }
+
+  page.appendChild(drawStats([
+    {label:'Live Loads',val:loads.length,color:'var(--ac)',mod:''},
+    {label:'Team Required',val:loads.filter(function(l){return l.isTeam;}).length,color:'var(--danger)',mod:'s-danger'},
+    {label:'My Bids',val:myBids.length,color:'var(--success)',mod:'s-success'},
+    {label:'Awarded',val:myBids.filter(function(b){return b.status==='awarded';}).length,color:'var(--info)',mod:'s-info'}
+  ]));
+
+  var card=d('card');
+  card.appendChild(d('card-header',[
+    mkRow([
+      mk('span',{cls:'card-title'},'Available Loads'),
+      S.loading?mk('span',{style:{fontSize:'12px',color:'var(--text3)',fontFamily:'var(--font-mono)'}},[mk('span',{cls:'spin'},'↻'),' Fetching...'])
+              :mk('span',{style:{fontSize:'11px',color:'var(--text3)',fontFamily:'var(--font-mono)'}},[mk('span',{cls:'live-dot'}),loads.length+' active'])
+    ]),
+    mkRow([
+      S.lastRefresh?t('Updated '+S.lastRefresh.toLocaleTimeString(),{fontSize:'11px',color:'var(--text3)',fontFamily:'var(--font-mono)'}):null,
+      btn('bg','↻ Refresh',doRefresh,{padding:'6px 12px',fontSize:'12px'})
+    ])
+  ]));
+
+  if(S.error)card.appendChild(d('err-box',S.error,{margin:'12px 16px'}));
+
+
+  var oa=d('oa');
+  var tbl=mk('table');
+  var thead=mk('thead'),hr=mk('tr');
+  ['Load #','Route','Miles','Pickup','Bidding Ends','Time Left','Lowest Bid','Bids','Status','',''].forEach(function(h){hr.appendChild(mk('th',{},h));});
+  thead.appendChild(hr);tbl.appendChild(thead);
+  var tbody=mk('tbody');
+
+  if(!loads.length){
+    var tr=mk('tr');
+    var td=mk('td',{colspan:'11',style:{textAlign:'center',padding:'56px',color:'var(--text3)',fontFamily:'var(--font-mono)',fontSize:'12px'}});
+    td.textContent='NO ACTIVE LOADS — CLICK REFRESH';
+    tr.appendChild(td);tbody.appendChild(tr);
+  }else{
+    loads.forEach(function(load){
+      var mb=null;
+      for(var i=0;i<myBids.length;i++){if(myBids[i].loadId===load.id){mb=myBids[i];break;}}
+      var low=lowestBid(load.id);
+      var bc=bidCount(load.id);
+      var tr=mk('tr');
+
+      /* Load # */
+      cell(tr,mk('a',{href:load.link,target:'_blank',style:{color:'var(--ac)',fontFamily:'var(--font-mono)',fontSize:'11px'}},'#'+load.id));
+      /* Route */
+      var rc=mk('td');
+      rc.appendChild(mk('div',{style:{fontWeight:'600',fontSize:'14px'}},load.origin));
+      rc.appendChild(mk('div',{style:{color:'var(--text2)',fontSize:'12px',marginTop:'3px',fontFamily:'var(--font-mono)'}},'→ '+load.dest));
+      tr.appendChild(rc);
+      /* Miles */
+      var mc2=mk('td');
+      mc2.appendChild(t(load.miles.toLocaleString(),{color:load.isTeam?'var(--danger)':'var(--text)',fontWeight:load.isTeam?'700':'400',fontFamily:'var(--font-mono)',fontSize:'12px'}));
+      if(load.isTeam){mc2.appendChild(mk('br'));mc2.appendChild(mk('span',{style:{marginTop:'3px',display:'inline-block'}},bdg('brd','TEAM')));}
+      if(load.isHot){mc2.appendChild(mk('br'));mc2.appendChild(mk('span',{style:{marginTop:'3px',display:'inline-block'}},bdg('bhot','🔥 HOT')));}
+      tr.appendChild(mc2);
+      if(load.isHot)tr.className='hot-row';
+      /* Pickup */
+      cell(tr,load.pickup,{fontFamily:'var(--font-mono)',fontSize:'11px',color:'var(--text2)'});
+      /* Bidding ends */
+      cell(tr,load.biddingEnds||'--',{fontFamily:'var(--font-mono)',fontSize:'11px',color:'var(--warn)'});
+      /* Timer */
+      var tc=mk('td');var tel=timerEl(load);tc.appendChild(tel||t('--',{color:'var(--text3)'}));tr.appendChild(tc);
+      /* Lowest bid */
+      var lbc=mk('td');
+      lbc.appendChild(low!==null?mk('span',{cls:'low-bid'},'$'+low.toLocaleString()):mk('span',{cls:'no-bid'},'First bid'));
+      tr.appendChild(lbc);
+      /* Bid count */
+      cell(tr,String(bc),{fontFamily:'var(--font-mono)',fontSize:'12px',color:'var(--text2)'});
+      /* Status */
+      var sc=mk('td');sc.appendChild(mb?bdg('bs','Bid Placed'):bdg('ba','Open'));tr.appendChild(sc);
+      /* Bid button */
+      var ac=mk('td');
+      (function(l){ac.appendChild(btn(mb?'bo':'bp',mb?'Edit Bid':'Place Bid',function(){openBidModal(l);},{padding:'6px 14px',fontSize:'12px'}));})(load);
+      tr.appendChild(ac);
+      /* Map button */
+      var mapc=mk('td');
+      if(load.mapLink)mapc.appendChild(mk('a',{href:load.mapLink,target:'_blank',cls:'map-btn'},'🗺 Route'));
+      tr.appendChild(mapc);
+      tbody.appendChild(tr);
+    });
+  }
+  tbl.appendChild(tbody);oa.appendChild(tbl);card.appendChild(oa);
+  page.appendChild(card);
+
+  /* My bids */
+  if(myBids.length){
+    var bc2=d('card');
+    bc2.appendChild(d('card-header',[mk('span',{cls:'card-title'},'My Active Bids')]));
+    var boa=d('oa'),bt=mk('table'),bh=mk('thead'),bhr=mk('tr');
+    ['Load #','Route','My Rate','Low Bid','ETA to Pickup','Driver(s)','Status'].forEach(function(h){bhr.appendChild(mk('th',{},h));});
+    bh.appendChild(bhr);bt.appendChild(bh);
+    var btb=mk('tbody');
+    myBids.forEach(function(bid){
+      var ld=null;for(var i=0;i<loads.length;i++){if(loads[i].id===bid.loadId){ld=loads[i];break;}}
+      var low2=lowestBid(bid.loadId);
+      var isMine=low2!==null&&Number(bid.rate)===low2;
+      var tr=mk('tr');
+      cell(tr,'#'+bid.loadId,{fontFamily:'var(--font-mono)',color:'var(--ac)',fontSize:'11px'});
+      cell(tr,ld?ld.origin+' → '+ld.dest:'--',{fontSize:'13px'});
+      var rc2=mk('td');
+      rc2.appendChild(t('$'+Number(bid.rate||0).toLocaleString(),{fontFamily:'var(--font-mono)',color:isMine?'var(--success)':'var(--text)',fontWeight:'700',fontSize:'13px'}));
+      if(isMine){rc2.appendChild(mk('span',{style:{marginLeft:'5px'}},bdg('bs','Lowest')));}
+      tr.appendChild(rc2);
+      cell(tr,low2!==null?'$'+low2.toLocaleString():'--',{fontFamily:'var(--font-mono)',color:'var(--success)',fontSize:'12px'});
+      cell(tr,bid.eta?(bid.eta+'').replace('T',' '):'--',{fontFamily:'var(--font-mono)',fontSize:'11px'});
+      cell(tr,bid.d1n+(bid.d2n?' / '+bid.d2n:''),{fontSize:'13px'});
+      var sc2=mk('td');sc2.appendChild(bdg(bid.status==='awarded'?'bs':bid.status==='rejected'?'brd':'ba',(bid.status||'pending').toUpperCase()));tr.appendChild(sc2);
+      btb.appendChild(tr);
+    });
+    bt.appendChild(btb);boa.appendChild(bt);bc2.appendChild(boa);page.appendChild(bc2);
+  }
+
+  frag.appendChild(page);
+  return frag;
+}
+
+/* BID MODAL — appended to body, never calls draw() on input */
+function openBidModal(load){
+  var old=document.getElementById('bid-modal-bg');
+  if(old)old.parentNode.removeChild(old);
+  S.bidLoad=load;
+  var modal=buildBidModal(load);
+  document.body.appendChild(modal);
+}
+function closeBidModal(){
+  var el=document.getElementById('bid-modal-bg');
+  if(el)el.parentNode.removeChild(el);
+  S.bidLoad=null;
+}
+
+function buildBidModal(load){
+  var sess=S.session;
+  var isTeam=load.isTeam;
+  var bids=store('lb_bids')||[];
+  var existing=null;
+  for(var i=0;i<bids.length;i++){if(bids[i].loadId===load.id&&bids[i].carrierId===sess.id){existing=bids[i];break;}}
+  var low=lowestBid(load.id);
+  var minRate=low!==null?low-BID_GAP:null;
+
+  var bg=mk('div',{cls:'modal-bg',id:'bid-modal-bg'});
+  var modal=d('modal');
+
+  /* Header */
+  var mh=d('modal-header',[
+    d('',[
+      mk('div',{cls:'modal-title'},'Place Bid — #'+load.id),
+      mk('div',{cls:'modal-sub'},load.origin+' → '+load.dest+' · '+load.miles.toLocaleString()+' mi')
+    ]),
+    btn('','×',closeBidModal,{background:'none',border:'none',fontSize:'24px',color:'var(--text3)',cursor:'pointer',lineHeight:'1'})
+  ]);
+  modal.appendChild(mh);
+
+  var body=d('modal-body');
+
+  /* Lowest bid info */
+  if(low!==null){
+    var ib=d('info-box');
+    ib.appendChild(t('Current lowest bid: ',{fontFamily:'var(--font-mono)',fontSize:'13px'}));
+    ib.appendChild(t('$'+low.toLocaleString(),{fontFamily:'var(--font-mono)',fontSize:'14px',fontWeight:'700',color:'var(--success)'}));
+    ib.appendChild(mk('br'));
+    ib.appendChild(mk('span',{style:{fontFamily:'var(--font-mono)',fontSize:'11px',color:'var(--text2)',display:'block',marginTop:'4px'}},'To beat it you must bid $'+minRate.toLocaleString()+' or less (at least $'+BID_GAP+' under).'));
+    body.appendChild(ib);
+  }else{
+    body.appendChild(d('info-box',mk('span',{style:{fontFamily:'var(--font-mono)',fontSize:'13px'}},'No bids yet — be the first!')));
+  }
+
+  if(isTeam)body.appendChild(d('warn-box','⚠ Team load ('+load.miles.toLocaleString()+' mi) — info required for both drivers.'));
+
+  /* Rate + ETA */
+  var rr=mk('div',{cls:'fg'});
+  var rateInp=mk('input',{type:'number',id:'bid-rate',placeholder:minRate!==null?'Max $'+minRate:'Enter rate',value:existing?existing.rate:''});
+  rr.appendChild(fld('All-In Rate ($)',rateInp));
+  var etaInp=mk('input',{type:'datetime-local',id:'bid-eta',value:existing?existing.eta:''});
+  rr.appendChild(fld('ETA to Pickup (Date & Time)',etaInp));
+  body.appendChild(rr);
+
+  /* Driver block builder */
+  function driverBlock(label,pre,color){
+    var blk=d('ds');
+    blk.appendChild(mk('div',{cls:'dl',style:color?{color:color}:{}},'Driver '+label));
+    var dr=mk('div',{cls:'fg'});
+    dr.appendChild(fld('Full Name',mk('input',{type:'text',id:'bid-'+pre+'n',placeholder:'Full Name',value:existing&&existing[pre+'n']?existing[pre+'n']:''})));
+    dr.appendChild(fld('Phone Number',mk('input',{type:'tel',id:'bid-'+pre+'p',placeholder:'(555) 000-0000',value:existing&&existing[pre+'p']?existing[pre+'p']:''})));
+    blk.appendChild(dr);
+    var cbWrap=d('ff');
+    cbWrap.appendChild(mk('label',{},'Driver Has Domiciled CDL'));
+    var cbRow=d('cb-row');
+    var cb=mk('input',{type:'checkbox',id:'bid-'+pre+'nd'});
+    if(existing&&existing[pre+'nd'])cb.checked=true;
+    var cbLbl=mk('label',{htmlFor:'bid-'+pre+'nd'},'Yes, driver holds a domiciled CDL');
+    cbRow.appendChild(cb);cbRow.appendChild(cbLbl);
+    cbWrap.appendChild(cbRow);
+    blk.appendChild(cbWrap);
+    return blk;
+  }
+  body.appendChild(driverBlock('1','d1',null));
+  if(isTeam)body.appendChild(driverBlock('2 (Team)','d2','var(--info)'));
+
+  /* Error */
+  var errEl=mk('div',{cls:'err-box',id:'bid-err',style:{display:'none',marginTop:'12px'}});
+  body.appendChild(errEl);
+
+  /* Footer */
+  var footer=d('',null,{display:'flex',gap:'10px',marginTop:'18px',paddingTop:'16px',borderTop:'1px solid var(--border)'});
+  footer.appendChild(btn('bg','Cancel',closeBidModal,{flex:'1'}));
+  footer.appendChild(btn('bp',existing?'Update Bid':'Submit Bid',submitBid,{flex:'2'}));
+  body.appendChild(footer);
+  modal.appendChild(body);
+  bg.appendChild(modal);
+  bg.addEventListener('click',function(e){if(e.target===bg)closeBidModal();});
+  return bg;
+
+  function showErr(msg){var e=document.getElementById('bid-err');if(e){e.textContent=msg;e.style.display='block';}}
+
+  function submitBid(){
+    var rate=document.getElementById('bid-rate').value;
+    var eta=document.getElementById('bid-eta').value;
+    var d1n=document.getElementById('bid-d1n').value;
+    var d1p=document.getElementById('bid-d1p').value;
+    var d1nd=document.getElementById('bid-d1nd').checked;
+    var d2n=isTeam?(document.getElementById('bid-d2n')||{}).value||'':'';
+    var d2p=isTeam?(document.getElementById('bid-d2p')||{}).value||'':'';
+    var d2nd=isTeam?((document.getElementById('bid-d2nd')||{}).checked||false):false;
+    if(!rate||!eta||!d1n||!d1p){showErr('Complete all required fields.');return;}
+    if(isTeam&&(!d2n||!d2p)){showErr('Team load: full info required for both drivers.');return;}
+    if(minRate!==null&&Number(rate)>minRate&&(!existing||Number(existing.rate)!==Number(rate))){
+      showErr('Must bid $'+minRate.toLocaleString()+' or less to beat the current lowest bid of $'+low.toLocaleString()+' (at least $'+BID_GAP+' under).');return;
+    }
+    var bid={rate:rate,eta:eta,d1n:d1n,d1p:d1p,d1nd:d1nd,d2n:d2n,d2p:d2p,d2nd:d2nd,loadId:load.id,carrierId:sess.id,carrierName:sess.carrier,mc:sess.mc,status:'pending',at:Date.now()};
+    var all=(store('lb_bids')||[]).filter(function(b){return!(b.loadId===load.id&&b.carrierId===sess.id);});
+    store('lb_bids',[].concat(all,[bid]));
+    closeBidModal();
+    S.toast='Bid submitted for load #'+load.id;
+    draw();
+  }
+}
+
+/* ADMIN */
+function drawAdmin(){
+  var loads=S.loads,tab=S.tab;
+  var users=store('lb_users')||[];
+  var bids=store('lb_bids')||[];
+  var pending=users.filter(function(u){return u.status==='pending';});
+  var frag=document.createDocumentFragment();
+  frag.appendChild(drawNav());
+  var page=d('page');
+
+  page.appendChild(drawStats([
+    {label:'Live Loads',val:loads.length,color:'var(--ac)',mod:''},
+    {label:'Team Required',val:loads.filter(function(l){return l.isTeam;}).length,color:'var(--danger)',mod:'s-danger'},
+    {label:'Carriers',val:users.length,color:'var(--info)',mod:'s-info'},
+    {label:'Pending',val:pending.length,color:pending.length>0?'var(--danger)':'var(--text2)',mod:pending.length>0?'s-danger':''}
+  ]));
+
+  var tabs=d('tabs');
+  [{id:'loads',label:'Live Loads',b:loads.length},{id:'carriers',label:'Carriers',b:pending.length>0?pending.length+' PENDING':users.length},{id:'bids',label:'Bids',b:bids.length}]
+  .forEach(function(t2){
+    var tb=mk('button',{cls:'tab'+(tab===t2.id?' on':''),onclick:function(){go({tab:t2.id});}},t2.label);
+    tb.appendChild(mk('span',{style:{fontSize:'9px',background:'var(--bg4)',padding:'1px 7px',borderRadius:'10px',marginLeft:'6px',fontFamily:'var(--font-mono)'}},String(t2.b)));
+    tabs.appendChild(tb);
+  });
+  page.appendChild(tabs);
+
+  /* LOADS TAB */
+  if(tab==='loads'){
+    var hrow=d('',null,{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:'14px',flexWrap:'wrap',gap:'8px'});
+    hrow.appendChild(t(S.loading?'Fetching...':'● Live from @'+CHANNEL+' — auto-refreshes every 2 min',{fontSize:'11px',color:'var(--text3)',fontFamily:'var(--font-mono)'}));
+    var rrow=d('',null,{display:'flex',gap:'8px',alignItems:'center'});
+    if(S.lastRefresh)rrow.appendChild(t('Updated '+S.lastRefresh.toLocaleTimeString(),{fontSize:'11px',color:'var(--text3)',fontFamily:'var(--font-mono)'}));
+    rrow.appendChild(btn('bp','↻ Refresh Now',doRefresh,{fontSize:'12px',padding:'7px 14px'}));
+    hrow.appendChild(rrow);
+    page.appendChild(hrow);
+    if(S.error)page.appendChild(d('err-box',S.error,{marginBottom:'12px'}));
+    var card=d('card');var oa=d('oa');var tbl=mk('table');
+    var th=mk('thead');var hr=mk('tr');
+    ['Load #','Origin','Destination','Miles','Pickup','Bidding Ends','Timer','Bids','Low Bid',''].forEach(function(h){hr.appendChild(mk('th',{},h));});
+    th.appendChild(hr);tbl.appendChild(th);
+    var tb2=mk('tbody');
+    if(!loads.length){
+      var tr=mk('tr');var td=mk('td',{colspan:'10',style:{textAlign:'center',padding:'48px',color:'var(--text3)',fontFamily:'var(--font-mono)',fontSize:'11px'}});
+      td.textContent=S.loading?'LOADING...':'NO ACTIVE LOADS';tr.appendChild(td);tb2.appendChild(tr);
+    }else{
+      loads.forEach(function(load){
+        var tr=mk('tr');
+        cell(tr,mk('a',{href:load.link,target:'_blank',style:{color:'var(--ac)',fontFamily:'var(--font-mono)',fontSize:'11px'}},'#'+load.id));
+        cell(tr,load.origin,{fontWeight:'600'});
+        cell(tr,load.dest,{color:'var(--text2)'});
+        var mc3=mk('td');
+        mc3.appendChild(t(load.miles.toLocaleString(),{color:load.isTeam?'var(--danger)':'var(--text)',fontWeight:load.isTeam?'700':'400',fontFamily:'var(--font-mono)',fontSize:'11px'}));
+        if(load.isTeam){mc3.appendChild(mk('br'));mc3.appendChild(bdg('brd','TEAM'));}
+        if(load.isHot){mc3.appendChild(mk('br'));mc3.appendChild(bdg('bhot','🔥 HOT'));}
+        tr.appendChild(mc3);
+        if(load.isHot)tr.className='hot-row';
+        cell(tr,load.pickup,{fontFamily:'var(--font-mono)',fontSize:'11px',color:'var(--text2)'});
+        cell(tr,load.biddingEnds||'--',{fontFamily:'var(--font-mono)',fontSize:'11px',color:'var(--warn)'});
+        var tc=mk('td');var tel=timerEl(load);tc.appendChild(tel||t('--'));tr.appendChild(tc);
+        cell(tr,String(bidCount(load.id)),{fontFamily:'var(--font-mono)',fontSize:'12px'});
+        var low2=lowestBid(load.id);
+        cell(tr,low2!==null?'$'+low2.toLocaleString():'--',{fontFamily:'var(--font-mono)',color:'var(--success)',fontSize:'12px'});
+        var mapc=mk('td');if(load.mapLink)mapc.appendChild(mk('a',{href:load.mapLink,target:'_blank',cls:'map-btn'},'🗺 Route'));tr.appendChild(mapc);
+        tb2.appendChild(tr);
+      });
+    }
+    tbl.appendChild(tb2);oa.appendChild(tbl);card.appendChild(oa);page.appendChild(card);
+  }
+
+  /* CARRIERS TAB */
+  if(tab==='carriers'){
+    if(pending.length){
+      var pc=d('card',null,{borderColor:'rgba(232,93,63,.3)',marginBottom:'16px'});
+      pc.appendChild(d('card-header',[mk('span',{cls:'card-title',style:{color:'var(--danger)'}},'Pending Approval'),bdg('brd',String(pending.length))]));
+      var pt=mk('table');var ph=mk('thead');var phr=mk('tr');
+      ['Carrier','MC #','Email','Registered',''].forEach(function(h){phr.appendChild(mk('th',{},h));});
+      ph.appendChild(phr);pt.appendChild(ph);
+      var pb=mk('tbody');
+      pending.forEach(function(u){
+        var tr=mk('tr');
+        cell(tr,u.carrier,{fontWeight:'600'});
+        cell(tr,u.mc,{fontFamily:'var(--font-mono)',color:'var(--ac)',fontSize:'12px'});
+        cell(tr,u.email);
+        cell(tr,new Date(u.at).toLocaleDateString());
+        var ac=mk('td');
+        (function(uid){
+          ac.appendChild(btn('bp','Approve',function(){approveUser(uid,'approved');},{padding:'5px 12px',fontSize:'12px',marginRight:'6px'}));
+          ac.appendChild(btn('bd','Deny',function(){approveUser(uid,'denied');},{padding:'5px 12px',fontSize:'12px'}));
+        })(u.id);
+        tr.appendChild(ac);pb.appendChild(tr);
+      });
+      pt.appendChild(pb);pc.appendChild(pt);page.appendChild(pc);
+    }
+    var ac2=d('card');
+    ac2.appendChild(d('card-header',[mk('span',{cls:'card-title'},'All Carriers'),bdg('bs',String(users.length))]));
+    var at=mk('table');var ah=mk('thead');var ahr=mk('tr');
+    ['Carrier','MC #','Email','Status','Bids',''].forEach(function(h){ahr.appendChild(mk('th',{},h));});
+    ah.appendChild(ahr);at.appendChild(ah);
+    var ab=mk('tbody');
+    if(!users.length){
+      var tr2=mk('tr');var td2=mk('td',{colspan:'6',style:{textAlign:'center',padding:'40px',color:'var(--text3)',fontFamily:'var(--font-mono)',fontSize:'11px'}});
+      td2.textContent='NO CARRIERS YET';tr2.appendChild(td2);ab.appendChild(tr2);
+    }else{
+      users.forEach(function(u){
+        var tr=mk('tr');
+        cell(tr,u.carrier,{fontWeight:'600'});
+        cell(tr,u.mc,{fontFamily:'var(--font-mono)',color:'var(--ac)',fontSize:'12px'});
+        cell(tr,u.email);
+        var sc=mk('td');sc.appendChild(bdg(u.status==='approved'?'bs':u.status==='denied'?'brd':'ba',u.status.toUpperCase()));tr.appendChild(sc);
+        cell(tr,String(bids.filter(function(b){return b.carrierId===u.id;}).length),{fontFamily:'var(--font-mono)',fontSize:'12px'});
+        var btns=mk('td');
+        (function(uid,ust){
+          if(ust!=='approved')btns.appendChild(btn('bs2','Approve',function(){approveUser(uid,'approved');},{padding:'4px 10px',fontSize:'12px',marginRight:'6px'}));
+          if(ust!=='denied')btns.appendChild(btn('bd','Revoke',function(){approveUser(uid,'denied');},{padding:'4px 10px',fontSize:'12px'}));
+        })(u.id,u.status);
+        tr.appendChild(btns);ab.appendChild(tr);
+      });
+    }
+    at.appendChild(ab);ac2.appendChild(at);page.appendChild(ac2);
+  }
+
+  /* BIDS TAB */
+  if(tab==='bids'){
+    if(!bids.length){
+      var nob=d('card');
+      var nobt=mk('div',{style:{padding:'48px',textAlign:'center',color:'var(--text3)',fontFamily:'var(--font-mono)',fontSize:'11px'}});
+      nobt.textContent='NO BIDS YET';nob.appendChild(nobt);page.appendChild(nob);
+    }
+    loads.filter(function(l){return bids.some(function(b){return b.loadId===l.id;});}).forEach(function(load){
+      var lb=bids.filter(function(b){return b.loadId===load.id;});
+      lb.sort(function(a,b2){return Number(a.rate)-Number(b2.rate);});
+      var low3=lowestBid(load.id);
+      var card2=d('card',null,{marginBottom:'14px'});
+      var ch2=d('card-header');
+      var chLeft=d('',null,{display:'flex',alignItems:'center',gap:'10px',flexWrap:'wrap'});
+      chLeft.appendChild(mk('span',{style:{fontFamily:'var(--font-mono)',color:'var(--ac)',fontSize:'11px'}},'#'+load.id));
+      chLeft.appendChild(t(load.origin+' → '+load.dest,{fontWeight:'600',fontSize:'14px'}));
+      chLeft.appendChild(t(load.miles.toLocaleString()+' mi',{color:'var(--text3)',fontSize:'11px',fontFamily:'var(--font-mono)'}));
+      if(low3!==null)chLeft.appendChild(mk('span',{cls:'low-bid'},'Lowest: $'+low3.toLocaleString()));
+      ch2.appendChild(chLeft);
+      ch2.appendChild(bdg('bi',lb.length+' bid'+(lb.length!==1?'s':'')));
+      card2.appendChild(ch2);
+      var oa2=d('oa');var tbl2=mk('table');var th2=mk('thead');var hr2=mk('tr');
+      ['Carrier','MC #','Rate','ETA to Pickup','Driver 1','Driver 2','Status',''].forEach(function(h){hr2.appendChild(mk('th',{},h));});
+      th2.appendChild(hr2);tbl2.appendChild(th2);
+      var tb3=mk('tbody');
+      lb.forEach(function(bid){
+        var isLow=low3!==null&&Number(bid.rate)===low3;
+        var tr=mk('tr');
+        if(isLow)tr.style.background='rgba(60,185,122,.05)';
+        cell(tr,bid.carrierName,{fontWeight:'600'});
+        cell(tr,bid.mc,{fontFamily:'var(--font-mono)',color:'var(--ac)',fontSize:'11px'});
+        var rc3=mk('td');
+        rc3.appendChild(t('$'+Number(bid.rate||0).toLocaleString(),{fontFamily:'var(--font-mono)',color:isLow?'var(--success)':'var(--text)',fontWeight:'700',fontSize:'13px'}));
+        if(isLow)rc3.appendChild(mk('span',{style:{marginLeft:'5px'}},bdg('bs','LOWEST')));
+        tr.appendChild(rc3);
+        cell(tr,bid.eta?(bid.eta+'').replace('T',' '):'--',{fontFamily:'var(--font-mono)',fontSize:'11px'});
+        cell(tr,bid.d1n+' '+bid.d1p+(bid.d1nd?' [Dom CDL]':''),{fontSize:'13px'});
+        cell(tr,bid.d2n?bid.d2n+' '+bid.d2p+(bid.d2nd?' [Dom CDL]':''):'--',{fontSize:'13px'});
+        var sc=mk('td');sc.appendChild(bdg(bid.status==='awarded'?'bs':bid.status==='rejected'?'brd':'ba',(bid.status||'pending').toUpperCase()));tr.appendChild(sc);
+        var ac3=mk('td');
+        (function(lid,cid){
+          if(bid.status!=='awarded')ac3.appendChild(btn('bp','Award',function(){updateBid(lid,cid,'awarded');},{padding:'4px 10px',fontSize:'12px',marginRight:'6px'}));
+          if(bid.status!=='rejected')ac3.appendChild(btn('bd','Reject',function(){updateBid(lid,cid,'rejected');},{padding:'4px 10px',fontSize:'12px'}));
+        })(bid.loadId,bid.carrierId);
+        tr.appendChild(ac3);tb3.appendChild(tr);
+      });
+      tbl2.appendChild(tb3);oa2.appendChild(tbl2);card2.appendChild(oa2);page.appendChild(card2);
+    });
+  }
+
+  frag.appendChild(page);
+  return frag;
+}
+
+function approveUser(id,status){
+  var u=(store('lb_users')||[]).map(function(u){return u.id===id?Object.assign({},u,{status:status}):u;});
+  store('lb_users',u);draw();
+}
+function updateBid(loadId,carrierId,status){
+  var b=(store('lb_bids')||[]).map(function(b){return b.loadId===loadId&&b.carrierId===carrierId?Object.assign({},b,{status:status}):b;});
+  store('lb_bids',b);draw();
+}
+
+var _timer=null;
+function doRefresh(){
+  go({loading:true,error:''});
+  fetchLoads(function(err,loads){
+    var now=Date.now();
+    var fresh=(loads||[]).filter(function(l){return now<(l.expiresAt||(l.ts+30*60*1000));});
+    go({loads:fresh,loading:false,lastRefresh:new Date(),error:err?'Could not fetch: '+err:''});
+    startTimers();
+  });
+}
+
+/* BOOT — show UI immediately, fetch in background */
+(function(){
+  var sess=store('lb_sess');
+  if(sess&&sess.id){S.session=sess;S.view=sess.role==='admin'?'admin':'board';}
+  draw();
+  startTimers();
+  doRefresh();
+  _timer=setInterval(doRefresh,120000);
+})();
+</script>
+</body>
+</html>
